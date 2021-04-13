@@ -10,18 +10,18 @@
 
 <script>
 export default {
-    data() {
-      const item = {
-        id: '1',
-        course_name: 'Java',
-        price: '518',
-        sort_num: 1,
-        status: "上架"
-      };
-      return {
-        courseList: Array(1).fill(item)
-      }
-    },
+    // data() {
+    //   const item = {
+    //     id: '1',
+    //     course_name: 'Java',
+    //     price: '518',
+    //     sort_num: 1,
+    //     status: "上架"
+    //   };
+    //   return {
+    //     courseList: Array(1).fill(item)
+    //   }
+    // },
 
     // create()定义钩子函数，在DOM页面之前执行
     created() {
@@ -31,11 +31,18 @@ export default {
     // 方法集合
     methods: {
         loadCourse() {
-            this.loading = ture;
-
+            this.loading = true;
+            const url = "http://localhost:8080/lagou_edu_home/course"
             // 访问后台接口获取数据
-
-            // 将获取的数据进行渲染进去
+            this.axios.get(url, {
+              params: {
+                methodName: "findCourseList"
+              }
+            }).then((response) => {
+              // 将获取的数据进行渲染进去
+              this.courseList = response.data
+              this.loading = false
+            });
         }
     }
 }
