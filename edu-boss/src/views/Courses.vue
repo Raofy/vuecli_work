@@ -127,27 +127,79 @@ export default {
   methods: {
     //方法1: 获取课程列表
     loadCourses() {
-      
+      this.loading = true;
+      // 请求后台接口
+      return axios.get("/course", {
+        params: {
+          "methodName": "findCourseList"
+        }
+      }).then(resp => {
+        console.log(resp);
+        this.loading = false;
+        this.courses = resp.data;
+      }).catch(error => {
+        this.$message.error("数据获取失败！！")
+      });
     },
 
     //方法2: 条件查询课程信息
     filterQuery() {
-     
+      console.log(this.filter.course_name);
+      this.loading = true;
+      // 请求后台接口
+      return axios.get("/course", {
+        params: {
+          methodName: "findByCourseNameAndStatus",
+          course_name: this.filter.course_name,
+          status: this.filter.status
+        }
+      }).then(resp => {
+        console.log(resp);
+        this.loading = false;
+        this.courses = resp.data;
+      }).catch(error => {
+        this.$message.error("数据获取失败！！");
+      })
     },
 
     //方法3: 添加课程跳转方法
     addCourse() {
+      // 首先跳转到课程加载页
+      this.$router.push({
+        name: "CourseItem",
+        params: {
+          courseId: "new"
+        }
+      });
      
     },
 
     //方法4: 修改课程状态
     updateStatus(item) {
-      
+      console.log("需要修改的状态为：" + item.id)
+      // 请求后端接口
+      axios.get("/course", {
+        params: {
+          methodName: "updateCourseStatus",
+          id: item.id
+        }
+      }).then(resp => {
+        // 将返回的状态字段，封装到对象中
+        Object.assign(item, resp.data);
+        // 重新加载一下页面
+        window.location.reload;
+      })
     },
 
     //方法5: 根据路由名称, 导航到对应组件
     handleNavigate(name, id) {
-     
+      // 首先跳转到课程加载页
+      this.$router.push({
+        name: name,
+        params: {
+          courseId: id
+        }
+      });
     },
 
     //价格前面添加¥ 方法
