@@ -17,7 +17,7 @@
         v-loading="loading"
         element-loading-text="数据加载中..."
       >
-        <header slot="header">基本信息</header>
+        <header slot="header"> </header>
         <el-form-item label="名称" prop="course_name">
           <el-input
             v-model="course.course_name"
@@ -217,21 +217,86 @@ export default {
       { text: "营销信息" }
     ];
 
+    // 获取路由传递的参数
+    const id = this.$route.params.courseId;
+
+    // 判断id是否有值，没有值就跳转错误页面
+    if(!id) {
+      return this.redirectToError();
+    }
+
+    // 判断是new还是具体的id
+    if(id === "new") {
+      // new代表新增，添加一个新增课程标题
+      this.course.title = "新增课程";
+    } else {
+      // 否则就是修改，调用后台接口loadCourse方法进行回显
+      this.loadCourse(id);
+    }
+
+    // data中创建formdata
+    this.params = new FormData();
   },
   methods: {
     //方法1: 保存和修改课程信息
     handleSave() {
+      // 检查是否拿到了正确的需要验证的form
+      this.$refs.form.validate(valid => {
+        if(!valid) return false;
+
+        // 设置content-type为多部件上传
+        let config = {
+          headers: {
+            "Content-Type": "multipart/form-data"
+          }
+        };
+
+        // 获取表单中的数据，保存到params（params就是FromData对象）
+        for(let key in this.course) {
+          console.log(key + "----" + this.course[key]);
+          this.params.append(key, this.course[key]);
+        }
+
+        // 进行提交后台
+        axios.post("/courseSalesInfo", this.params, config)
+        .then( resp => {
+        
+          if(resp.data.status == 0) {
+            // 保存成功，跳转首页
+            this.$router.back();
+          } else if (resp.data.status == 1) {
+            this.$message({
+              type: "error",
+              message: resp.data.msg
+            })
+          }
+        }).catch(error => {
+          this.$message.error("保存失败！！")
+        })
+      })
       
     },
 
     //文件上传
     onchange(file) {
-      
+      if(file != null) {
+        // 将文件信息保存到params中
+        this.params.append("file", file.raw, file.name);
+      }
     },
 
     //方法2: 根据ID 回显课程信
     loadCourse(id) {
-      
+      // 请求后端接口进行回显课程信息
+      axios.get("/course", {
+        params: {
+          methodName: "findCourseById",
+          id: id
+        }
+      }).then(resp => {
+        console.log("根据课程id进行回显信息" + resp.data);
+        this.course = resp.data
+      })
     },
 
     //跳转到错误

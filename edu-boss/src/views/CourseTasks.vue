@@ -55,6 +55,7 @@
               :key="index"
               :label="statusMapping[item]"
               :value="item"
+              @change="$forceUpdate()"
             ></el-option>
           </el-select>
         </el-form-item>
@@ -167,25 +168,99 @@ export default {
   },
   methods: {
     //方法1: 加载课程信息
-    loadCourse(id) {},
+    loadCourse(id) {
+      axios.get("/courseContent", {
+        params: {
+          methodName: "findCourseById",
+          course_id: id
+        }
+      }).then( resp => {
+        console.log(resp.data);
+        // 将数据保存到表单对象中
+        this.addSectionForm.course_id = resp.data.id;
+        this.addSectionForm.course_name = resp.data.course_name
+      }).catch(error => {
+        this.$message.error("数据获取失败！！");
+      })
+    },
 
     //方法2: 加载树(章节与课程)
-    loadChildren(id) {},
+    loadChildren(id) {
+      this.loading = true;
+      axios.get("/courseContent", {
+        params: {
+          methodName: "findSectionAndLessonByCourseId",
+          course_id: id
+        }
+      }).then(resp => {
+        this.sections = resp.data;
+        this.loading = false;
+      }).catch (error => {
+        this.loading = false;
+        this.$message.error("数据获取失败！！");
+      })
+    },
 
     //方法3: 显示添加章节表单,回显课程信息
-    handleShowAddSection() {},
+    handleShowAddSection() {
+      // 显示表单
+      this.showAddSection = true;
+    },
 
     //方法4: 添加&修改章节操作
-    handleAddSection() {},
+    handleAddSection() {
+      axios.post("/courseContent", {
+        params: {
+          methodName: "saveOrUpdateSection",
+          section: this.addSectionForm
+        }
+      }).then(resp => {
+        this.showAddSection = false;
+        // 重新加载列表
+        return this.loadChildren(this.addSectionForm.course_id);
+      }).then(() => {
+        // 重置表单
+        this.addSectionForm,section_name = "";
+        this.addSectionForm.description = "";
+        this.addSectionForm.order_num = 0;
+      }).catch (error => {
+        this.showAddSection = false;
+        this.$message.error("操作执行失败！！");
+      })
+    },
 
     //方法5: 修改章节回显方法
-    handleEditSection(section) {},
+    handleEditSection(section) {
+      // 对象拷贝
+      Object.assign(this.addSectionForm, section);
+      this.showAddSection = true;
+    },
 
     //方法6: 显示章节状态
-    showStatus(data) {},
+    showStatus(data) {
+      this.statusForm.id = data.id;
+      this.statusForm.status = data.status.toString();
+      this.statusForm.data = data;
+      this.showStatusForm = true;    // 显示状态表单
+    },
 
     //方法7: 修改章节状态
-    updateStatus(statusForm) {},
+    updateStatus(statusForm) {
+      axios.get("/courseContent", {
+        params: {
+          methodName: "updateSectionStatus",
+          status: this.statusForm.status,
+          id: this.statusForm.id
+        }
+      }).then(resp => {
+        this.statusForm.data.status = this.statusForm.status;
+        this.statusForm = {};
+        this.showStatus = false;
+      }).catch(error => {
+        this.showStatusForm = false;
+        this.$message.error("修改状态失败！！");
+      })
+    },
 
     //跳转到错误页面
     redirectToError() {

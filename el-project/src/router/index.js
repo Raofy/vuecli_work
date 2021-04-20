@@ -3,6 +3,7 @@ import VueRouter from 'vue-router'
 import Login from '@/components/Login.vue'
 import Index from '@/components/Index.vue'
 import Course from '@/components/Course.vue'
+import Tree from '@/components/Tree.vue'
 
 Vue.use(VueRouter)
 
@@ -28,6 +29,12 @@ const routes = [
       path: '/course',
       name: 'course',
       component: Course,
+    },
+    // 树形控件测试路由
+    {
+      path: '/tree',
+      name: "tree",
+      component: Tree
     }
   ]
   }

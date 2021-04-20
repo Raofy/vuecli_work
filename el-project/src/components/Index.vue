@@ -6,9 +6,12 @@
     <!--添加router属性-->
     <el-menu :default-openeds="['1']" background-color="#d3dce6" router >
       <el-submenu index="1">
-        <template slot="title"><i class="el-icon-message"></i>导航菜单</template>
+        <template slot="title">
+          <i class="el-icon-message"></i>导航菜单
+        </template>
         <el-menu-item-group>
-          <el-menu-item index="/course">菜单管理</el-menu-item>
+          <el-menu-item index="/course"><i class="el-icon-menu"></i>菜单管理</el-menu-item>
+          <el-menu-item index="/tree"><i class="el-icon-menu"></i>树形控件</el-menu-item>
         </el-menu-item-group>
       </el-submenu>
     </el-menu>
