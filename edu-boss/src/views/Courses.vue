@@ -80,8 +80,7 @@
             size="mini"
             :type="scope.row.status == '1' ? 'danger' : 'success'"
             @click="updateStatus(scope.row)"
-            >{{ scope.row.status == "1" ? "下架" : "发布" }}</el-button
-          >
+            >{{ scope.row.status == "1" ? "下架" : "发布" }}</el-button>
 
           <!-- 营销信息按钮 -->
           <el-button

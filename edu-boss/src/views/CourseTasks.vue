@@ -31,6 +31,13 @@
             size="small"
             @click.stop="showStatus(data)"
           >{{ statusMapping[data.status] }}</el-button>
+
+          <!-- 添加课时按钮 -->
+          <el-button v-if="node.level == 1" type="success" size="small" @click.stop="handleShowAddLesson(data)">添加课时</el-button>
+
+          <!-- 修改课时按钮 -->
+          <el-button v-if="node.level == 2" type="danger" size="mini" icon="el-icon-edit-outline" round @click.stop="handleEditLesson(data)">修改</el-button>
+
         </span>
       </div>
     </el-tree>
@@ -98,6 +105,49 @@
       </span>
     </el-dialog>
     <!-- 添加或修改章节 -->
+
+    <!-- 添加或修改课时 -->
+    <el-dialog class="add-dialog" title="课时信息" :visible.sync="showAddLesson">
+      <el-form
+        label-position="right"
+        label-width="110px"
+        ref="addLessonForm"
+        :model="addLessonForm"
+        :rules="rules"
+      >
+        <el-form-item label="课程" prop="course_name">
+          <el-input v-model="addLessonForm.course_name" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="章节" prop="section_name">
+          <el-input v-model="addLessonForm.section_name" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="课时名称" prop="theme">
+          <el-input v-model="addLessonForm.theme"></el-input>
+        </el-form-item>
+        <el-form-item label="时长" prop="duration">
+          <el-input v-model="addLessonForm.duration" type="number">
+            <template slot="append">请输入数字，单位：分钟</template>
+          </el-input>
+        </el-form-item>
+        <el-form-item label="是否开放试听" prop="is_free">
+          <el-radio-group v-model="addLessonForm.is_free">
+            <el-radio :label="0">是</el-radio>
+            <el-radio :label="1">否</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="课时排序" prop="order_num">
+          <el-input v-model="addLessonForm.order_num" type="number">
+            <template slot="append">数字控制排序，数字越大越靠后</template>
+          </el-input>
+        </el-form-item>
+      </el-form>
+
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="showAddLesson = false">取 消</el-button>
+        <el-button type="primary" @click="handleAddLesson">确 定</el-button>
+      </span>
+    </el-dialog>
+    <!-- 添加或修改课时 -->
   </section>
 </template>
 
@@ -115,6 +165,19 @@ export default {
       course_name: "",
       section_name: "",
       description: "",
+      order_num: 0
+    };
+
+    //定义课时信息
+    const addLessonForm = {
+      id:undefined,
+      course_id: undefined,
+      section_id: undefined,
+      course_name: "",
+      section_name: "",
+      theme:"",
+      duration: 0,
+      is_free: 0,
       order_num: 0
     };
 
@@ -260,6 +323,74 @@ export default {
         this.showStatusForm = false;
         this.$message.error("修改状态失败！！");
       })
+    },
+
+    // 方法8：显示添加课时表单,回显课程信息
+    handleShowAddLesson(data) {
+      this.addLessonForm = {
+        course_id: this.addLessonForm.course_id,
+        course_name: this.addLessonForm.course_name,
+        section_id: data.id,
+        section_name: data.section_name
+      };
+      //显示表单
+      this.showAddLesson = true;
+    },
+
+    // 方法9：添加和修改课时状态
+    handleAddLesson() {
+      this.$refs.addLessonForm.validate(valid => {
+        if (!valid) return false;
+
+        axios
+          .post("/courseContent", {
+            methodName: "saveOrUpdateLesson",
+            lesson:this.addLessonForm
+          })
+          .then(resp => {
+            this.showAddLesson = false;
+            //重新加载列表
+            return this.loadChildren(this.addLessonForm.course_id);
+          })
+          .catch(error => {
+            this.loading = false;
+            this.$message.error("操作执行失败! ! !");
+          });
+      });
+    },
+
+    //方法10: 修改课时回显所有信息方法
+    handleEditLesson(data) {
+      //发送请求到服务器查找课时对应章节名称
+      axios
+        .get("/courseContent",{
+          params:{
+            methodName:"findSectionBySectionId",
+            section_id:data.section_id
+          }
+        })
+        .then(res =>{
+          //将返回的章节信息保存到修改课时表单中,并回显其他信息
+          this.addLessonForm = {
+            id:data.id,
+            course_id: this.addLessonForm.course_id,
+            course_name: this.addLessonForm.course_name,
+            section_id : res.data.id,
+            section_name : res.data.section_name,
+            theme:data.theme,
+            duration:data.duration,
+            is_free:data.is_free,
+            order_num:data.order_num
+          };
+          // this.addLessonForm.section_name = res.data.section_name;
+          // Object.assign(this.addLessonForm, data);
+          //打开表单
+          this.showAddLesson = true;
+        })
+        .catch(error =>{
+          this.loading = false;
+          this.$message.error("操作执行失败! ! !");
+        })
     },
 
     //跳转到错误页面
